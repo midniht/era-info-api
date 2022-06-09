@@ -1,7 +1,4 @@
 name = "era"
-type = "javascript"
+compatibility_date = "2022-06-09"
 
-account_id = ""
-workers_dev = true
-route = ""
-zone_id = ""
+main = "src/index.js"
