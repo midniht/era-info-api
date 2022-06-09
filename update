@@ -1,0 +1,15 @@
+#!/bin/bash
+
+GAME_INFO_FILE=`find . -iwholename "./csv/gamebase.csv"`
+GAME_VERSION=`cat ${GAME_INFO_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g"`
+
+json_body="{
+  name: \"$(basename `git rev-parse --show-toplevel`)\",
+  version: \"${GAME_VERSION}\",
+  message: \"$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\\\n/;b label')\"
+}"
+
+echo "Working Directory: \"$(pwd)\""
+echo "API Token: \"${1}\""
+echo -e "JSON Body:\n${json_body}"
+# curl -X POST https://era-data.lackb.fun -H "Content-Type: application/json" -d $json_body
