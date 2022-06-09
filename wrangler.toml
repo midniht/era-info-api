@@ -1,5 +1,5 @@
-name = "era"
+name = "era-data"
 compatibility_date = "2022-06-09"
 
 main = "src/index.js"
-route = "era.syd.lackb.fun"
+route = "era.syd.workers.dev"
