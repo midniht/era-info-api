@@ -1,4 +1,4 @@
-name = "era-data"
+name = "era"
 compatibility_date = "2022-06-09"
 
 main = "src/index.js"
