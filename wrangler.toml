@@ -1,5 +1,3 @@
 name = "era"
 compatibility_date = "2022-06-09"
-
 main = "src/index.js"
-route = "era-data.lackb.fun"
