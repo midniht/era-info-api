@@ -12,7 +12,7 @@ GET `era-data.lackb.fun/游戏名/download`
 
 ## Todo
 
-- [ ] Auto CI/CD Workflow (GitHub Action)
+- [x] Auto CI/CD Workflow (GitHub Action)
 - [ ] 接入 Cloudflare KV 数据库
 - [ ] 设计 Token 鉴权和 fail to ban 机制（考虑 IP 白名单）
 - [ ] `/游戏名/download` 统一跳转到下载分流 CDN
