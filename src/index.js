@@ -7,7 +7,7 @@ addEventListener('fetch', event => {
  * @param {Request} request
  */
 async function handleRequest(request) {
-  return new Response('Hello era!', {
+  return new Response('Hello era! @6.10', {
     headers: { 'content-type': 'text/plain' },
   })
 }
