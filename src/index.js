@@ -13,15 +13,21 @@ async function handleRequest(request) {
   if (pathname === '/') {
     return Response.redirect(GITHUB_REPO_URL, 301)
   }
+  const game_name = pathname.replace(/^\//, '').split('/')[0]
   switch (request.method) {
     case 'GET':
-      return newResponse(`Hello era! ${pathname}`)
+      const game_info = await GAME_INFO_DB.get(game_name)
+      return newResponse(`{ msg: "Hello era!", data: "${game_info}" }`, 200)
       break
     case 'POST':
       const psk = request.headers.get('X-Custom-PSK')
       if (psk === API_TOKEN) {
         const body = await readRequestBody(request)
-        return newResponse(`todo: update game info\n${body}`)
+        await GAME_INFO_DB.put(game_name, body)
+        return newResponse(
+          '{ code: 200, msg: "Update Game Information Success" }',
+          200,
+        )
       }
       return newResponse('{ code: 401, msg: "Unauthorized" }', 401)
       break
