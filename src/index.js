@@ -18,7 +18,9 @@ async function handleRequest(request) {
   switch (request.method) {
     case 'GET':
       let query_action =
-        query.length === 2 ? query_param[1].toLocaleUpperCase() : 'version'
+        query_param.length === 2
+          ? query_param[1].toLocaleUpperCase()
+          : 'version'
       switch (query_action) {
         case 'download':
           return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
