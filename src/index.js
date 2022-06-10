@@ -17,11 +17,11 @@ async function handleRequest(request) {
   switch (request.method) {
     case 'GET':
       const game_info = await GAME_INFO_DB.get(game_name)
-      return newResponse(`{ msg: "Hello era!", data: "${game_info}" }`, 200)
+      const resp = { msg: 'Hello era!', data: game_info }
+      return newResponse(JSON.stringify(resp), 200)
       break
     case 'POST':
-      const psk = request.headers.get('X-Custom-PSK')
-      if (psk === API_TOKEN) {
+      if (request.headers.get('X-Custom-PSK') === API_TOKEN) {
         const body = await readRequestBody(request)
         await GAME_INFO_DB.put(game_name, body)
         return newResponse(
@@ -88,7 +88,7 @@ function newResponse(data, respCode = 200) {
     headers: {
       'content-type': isJSON(data)
         ? 'application/json;charset=UTF-8'
-        : 'text/plain',
+        : 'text/plain;charset=UTF-8',
     },
     status: respCode,
   })
