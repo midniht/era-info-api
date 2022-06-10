@@ -12,8 +12,10 @@ $ chmod 600 ~/era_games_data/ERA_API_TOKEN
 ## 使用
 
 ```Bash
-$ ~/era_games_data/update `cat ~/era_games_data/ERA_API_TOKEN`
+$ ~/era_games_data/update "TOKEN"
 ```
+
+> `TOKEN` 可直接省略；省略时默认读取 `~/era_games_data/ERA_API_TOKEN` 中记录的信息。
 
 ## 更新
 
