@@ -18,15 +18,9 @@ async function handleRequest(request) {
   switch (request.method) {
     case 'GET':
       let query_action =
-        query_param.length === 2
-          ? query_param[1].toLocaleUpperCase()
-          : 'version'
-      switch (query_action) {
-        case 'download':
-          return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
-          break
-        default:
-          break
+        query_param.length === 2 ? query_param[1].toLowerCase() : 'version'
+      if (query_action === 'download') {
+        return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
       }
       const game_info_text = await GAME_INFO_DB.get(game_name)
       if (game_info_text === null) {
@@ -39,11 +33,13 @@ async function handleRequest(request) {
       const resp = `${game_info.version}
 ${API_URL}/${game_info.name}/download
 
-最后更新于 ${game_info.update_at} SHA1 哈希值: ${game_info.hash}
-${game_info.title} by ${game_info.author}
+《${game_info.title}》 by 「${game_info.author}」
 ${game_info.description}
+最后更新于 ${game_info.update_at}
+哈希值(SHA1): ${game_info.hash}
+
 ${game_info.message}`
-      return newResponse(JSON.stringify(resp), 200)
+      return newResponse(resp, 200)
       break
     case 'POST':
       if (request.headers.get('X-Custom-PSK') === API_TOKEN) {
