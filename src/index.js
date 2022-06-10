@@ -17,7 +17,17 @@ async function handleRequest(request) {
   switch (request.method) {
     case 'GET':
       const game_info = await GAME_INFO_DB.get(game_name)
-      const resp = { msg: 'Hello era!', data: game_info }
+      if (game_info === null) {
+        return newResponse(
+          `{ "code": 404, "msg": "Game ${game_name} Not Found" }`,
+          404,
+        )
+      }
+      const resp = {
+        msg: 'Hello era!',
+        version: 'v0.1.0-1',
+        data: JSON.parse(game_info),
+      }
       return newResponse(JSON.stringify(resp), 200)
       break
     case 'POST':
