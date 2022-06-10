@@ -13,21 +13,34 @@ async function handleRequest(request) {
   if (pathname === '/') {
     return Response.redirect(GITHUB_REPO_URL, 301)
   }
-  const game_name = pathname.replace(/^\//, '').split('/')[0]
+  const query_param = pathname.replace(/^\//, '').split('/')
+  const game_name = query_param[0]
   switch (request.method) {
     case 'GET':
-      const game_info = await GAME_INFO_DB.get(game_name)
-      if (game_info === null) {
+      let query_action =
+        query.length === 2 ? query_param[1].toLocaleUpperCase() : 'version'
+      switch (query_action) {
+        case 'download':
+          return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
+          break
+        default:
+          break
+      }
+      const game_info_text = await GAME_INFO_DB.get(game_name)
+      if (game_info_text === null) {
         return newResponse(
           `{ "code": 404, "msg": "Game ${game_name} Not Found" }`,
           404,
         )
       }
-      const resp = {
-        msg: 'Hello era!',
-        version: 'v0.1.0-1',
-        data: JSON.parse(game_info),
-      }
+      const game_info = JSON.parse(game_info_text)
+      const resp = `${game_info.version}
+${API_URL}/${game_info.name}/download
+
+最后更新于 ${game_info.update_at} SHA1 哈希值: ${game_info.hash}
+${game_info.title} by ${game_info.author}
+${game_info.description}
+${game_info.message}`
       return newResponse(JSON.stringify(resp), 200)
       break
     case 'POST':
@@ -35,14 +48,14 @@ async function handleRequest(request) {
         const body = await readRequestBody(request)
         await GAME_INFO_DB.put(game_name, body)
         return newResponse(
-          '{ code: 200, msg: "Update Game Information Success" }',
+          '{ "code": 200, "msg": "Update Game Information Success" }',
           200,
         )
       }
-      return newResponse('{ code: 401, msg: "Unauthorized" }', 401)
+      return newResponse('{ "code": 401, "msg": "Unauthorized" }', 401)
       break
     default:
-      return newResponse('{ code: 405, msg: "Method Not Allowed" }', 405)
+      return newResponse('{ "code": 405, "msg": "Method Not Allowed" }', 405)
       break
   }
 }
