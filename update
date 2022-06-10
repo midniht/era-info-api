@@ -1,15 +1,40 @@
 #!/bin/bash
 
-GAME_INFO_FILE=`find . -iwholename "./csv/gamebase.csv"`
-GAME_VERSION=`cat ${GAME_INFO_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g"`
+if [ $# != 0 ] ; then
+  API_TOKEN="$1"
+else
+  token_file="`dirname $0`/ERA_API_TOKEN"
+  if [ -f "${token_file}" ] ; then
+    API_TOKEN=`cat ${token_file}`
+  else
+    API_TOKEN=""
+  fi
+fi
+
+GAMEBASE_FILE=`find . -iwholename "./csv/gamebase.csv"`
+GAME_NAME="$(basename `git rev-parse --show-toplevel`)"
+GAME_VERSION=`cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g"`
+GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g"`
+GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g"`
+GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g"`
+
+if [ -f "${GAME_NAME}.zip" ] ; then
+  GAME_HASH=`sha1sum ${GAME_NAME}.zip | awk '{print $1}'`
+else
+  GAME_HASH="error: file ${GAME_NAME}.zip not found"
+fi
 
 json_body="{
-  name: \"$(basename `git rev-parse --show-toplevel`)\",
+  name: \"${GAME_NAME}\",
   version: \"${GAME_VERSION}\",
-  message: \"$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\\\n/;b label')\"
+  title: \"${GAME_TITLE}\",
+  author: \"${GAME_AUTHOR}\",
+  description: \"${GAME_INFO}\",
+  message: \"$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\\\n/;b label')\",
+  hash: \"${GAME_HASH}\"
 }"
 
 echo "Working Directory: \"$(pwd)\""
-echo "API Token: \"${1}\""
+echo "API Token: \"${API_TOKEN}\""
 echo -e "JSON Body:\n${json_body}"
 # curl -X POST https://era-data.lackb.fun -H "Content-Type: application/json" -d $json_body
