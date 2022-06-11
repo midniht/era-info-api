@@ -36,9 +36,9 @@ ${API_URL}/${game_info.name}/download
 《${game_info.title}》 by 「${game_info.author}」
 ${game_info.description}
 最后更新于 ${game_info.update_at}
-哈希值(SHA1): ${game_info.hash}
+哈希值(SHA1): ${game_info.hash.toUpperCase()}
 
-${game_info.message}`
+${game_info.message.trim()}`
       return newResponse(resp, 200)
       break
     case 'POST':
