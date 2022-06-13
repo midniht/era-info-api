@@ -40,11 +40,11 @@ json_body="{
 }"
 
 echo "Working Directory: \"$(pwd)\""
-echo "[DEBUG] JSON Body: ${json_body}\n"
+echo -e "[DEBUG] JSON Body: ${json_body}\n"
 
 curl -X POST "https://${API_URL}/${GAME_NAME}" \
   -H "Content-Type: application/json;charset=UTF-8" \
   -H "X-Custom-PSK: ${API_TOKEN}" \
   -d "$json_body"
 
-echo "版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
+echo -e "\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"

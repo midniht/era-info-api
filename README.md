@@ -22,4 +22,6 @@ $ ~/era_games_data/update "TOKEN"
 ```Bash
 $ cd ~/era_games_data
 $ git pull
+# 如果发生冲突
+$ rm update && git pull && chmod +x update
 ```
