@@ -1,5 +1,7 @@
 #!/bin/bash
 
+API_URL="era-data.lackb.fun"
+
 if [ $# != 0 ] ; then
   API_TOKEN="$1"
 else
@@ -18,6 +20,8 @@ GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイト
 GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g"`
 GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g"`
 
+GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
+
 if [ -f "${GAME_NAME}.zip" ] ; then
   GAME_HASH=`sha1sum ${GAME_NAME}.zip | awk '{print $1}'`
 else
@@ -31,13 +35,16 @@ json_body="{
   \"title\": \"${GAME_TITLE}\",
   \"author\": \"${GAME_AUTHOR}\",
   \"description\": \"${GAME_INFO}\",
-  \"message\": \"$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g')\",
+  \"message\": \"${GIT_COMMIT_URL}\n$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g')\",
   \"hash\": \"${GAME_HASH}\"
 }"
 
 echo "Working Directory: \"$(pwd)\""
-echo "[DEBUG] JSON Body: ${json_body}"
-curl -X POST "https://era-data.lackb.fun/${GAME_NAME}" \
+echo "[DEBUG] JSON Body: ${json_body}\n"
+
+curl -X POST "https://${API_URL}/${GAME_NAME}" \
   -H "Content-Type: application/json;charset=UTF-8" \
   -H "X-Custom-PSK: ${API_TOKEN}" \
   -d "$json_body"
+
+echo "版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
