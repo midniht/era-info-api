@@ -42,9 +42,13 @@ json_body="{
 echo "Working Directory: \"$(pwd)\""
 echo -e "[DEBUG] JSON Body: ${json_body}\n"
 
-curl -X POST "https://${API_URL}/${GAME_NAME}" \
+resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_NAME}" \
   -H "Content-Type: application/json;charset=UTF-8" \
   -H "X-Custom-PSK: ${API_TOKEN}" \
-  -d "$json_body"
+  -d "$json_body"`
 
-echo -e "\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
+if [ $resp_code == "200" ] ; then
+  echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
+else
+  echo -e "更新版本信息失败 返回的响应为\n$(cat /tmp/update-era-games-data-result)"
+fi
