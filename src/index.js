@@ -19,8 +19,10 @@ async function handleRequest(request) {
     case 'GET':
       let query_action =
         query_param.length === 2 ? query_param[1].toLowerCase() : 'version'
-      if (query_action === 'download') {
+      if (query_action === 'file') {
         return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
+      } else if (query_action === 'download') {
+        return Response.redirect(`${DOWNLOAD_URL}/${game_name}.zip`, 302)
       }
       const game_info_text = await GAME_INFO_DB.get(game_name)
       if (game_info_text === null) {
