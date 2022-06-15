@@ -35,7 +35,7 @@ json_body="{
   \"title\": \"${GAME_TITLE}\",
   \"author\": \"${GAME_AUTHOR}\",
   \"description\": \"${GAME_INFO}\",
-  \"message\": \"${GIT_COMMIT_URL}\n$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g')\",
+  \"message\": \"${GIT_COMMIT_URL}\n$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g')\",
   \"hash\": \"${GAME_HASH}\"
 }"
 
@@ -50,5 +50,5 @@ resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X 
 if [ $resp_code == "200" ] ; then
   echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
 else
-  echo -e "更新版本信息失败 返回的响应为\n$(cat /tmp/update-era-games-data-result)"
+  echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
 fi
