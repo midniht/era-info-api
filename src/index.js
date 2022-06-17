@@ -39,6 +39,7 @@ ${API_URL}/${game_info.name}/download
 ${game_info.description}
 最后更新于 ${game_info.update_at}
 哈希值(SHA1): ${game_info.hash.toUpperCase()}
+文件大小: ${game_info.size}
 
 ${game_info.message.trim()}`
       return newResponse(resp, 200)
