@@ -35,13 +35,16 @@ async function handleRequest(request) {
       const resp = `${game_info.version}
 ${API_URL}/${game_info.name}/download
 
-《${game_info.title}》 by 「${game_info.author}」
-${game_info.description}
-最后更新于 ${game_info.update_at}
-哈希值(SHA1): ${game_info.hash.toUpperCase()}
-文件大小: ${game_info.size}
+《${game_info.title}》
+「${game_info.author}」
 
-${game_info.message.trim()}`
+${game_info.description}
+
+最后更新于 ${game_info.update_at}
+文件大小: ${game_info.size}
+文件哈希值: ${game_info.hash.toUpperCase()} (SHA1)
+
+详细改动: ${game_info.message.trim()}`
       return newResponse(resp, 200)
       break
     case 'POST':
