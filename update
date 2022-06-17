@@ -1,34 +1,52 @@
 #!/bin/bash
 
-API_URL="era-data.lackb.fun"
+humanize_size() {
+  while read file_bytes dummy; do
+    [ $file_bytes -lt 1024 ] && echo ${file_bytes} B && break
+    file_kilobytes=$(((file_bytes+512)/1024))
+    [ $file_kilobytes -lt 1024 ] && echo ${file_kilobytes} KB && break
+    file_megabytes=$(((file_kilobytes+512)/1024))
+    [ $file_megabytes -lt 1024 ] && echo ${file_megabytes} MB && break
+    file_gigabytes=$(((file_megabytes+512)/1024))
+    [ $file_gigabytes -lt 1024 ] && echo ${file_gigabytes} GB && break
+    file_terabytes=$(((file_gigabytes+512)/1024))
+    echo ${file_terabytes} TB
+  done
+}
 
-if [ $# != 0 ] ; then
-  API_TOKEN="$1"
-else
-  token_file="`dirname $0`/ERA_API_TOKEN"
-  if [ -f "${token_file}" ] ; then
-    API_TOKEN=`sed -n '1p;1q' ${token_file}`
+init() {
+  API_URL="era-data.lackb.fun"
+  if [ $# != 0 ] ; then
+    API_TOKEN="$1"
   else
-    API_TOKEN=""
+    token_file="`dirname $0`/ERA_API_TOKEN"
+    if [ -f "${token_file}" ] ; then
+      API_TOKEN=`sed -n '1p;1q' ${token_file}`
+    else
+      API_TOKEN=""
+    fi
   fi
-fi
+}
 
-GAMEBASE_FILE=`find . -iwholename "./csv/gamebase.csv"`
-GAME_NAME="$(basename `git rev-parse --show-toplevel`)"
-GAME_VERSION=`cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g"`
-GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g"`
-GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g"`
-GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g"`
+gen_json_body() {
+  GAMEBASE_FILE=`find . -iwholename "./csv/gamebase.csv"`
+  GAME_NAME="$(basename `git rev-parse --show-toplevel`)"
+  GAME_VERSION=`cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g"`
+  GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g"`
+  GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g"`
+  GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g"`
 
-GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
+  GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
 
-if [ -f "${GAME_NAME}.zip" ] ; then
-  GAME_HASH=`sha1sum ${GAME_NAME}.zip | awk '{print $1}'`
-else
-  GAME_HASH="error: file ${GAME_NAME}.zip not found"
-fi
+  GAME_SIZE="$(du -b ${GAME_NAME}.zip | humanize_size)"
 
-json_body="{
+  if [ -f "${GAME_NAME}.zip" ] ; then
+    GAME_HASH=`sha1sum ${GAME_NAME}.zip | awk '{print $1}'`
+  else
+    GAME_HASH="error: file ${GAME_NAME}.zip not found"
+  fi
+
+  json_body="{
   \"name\": \"${GAME_NAME}\",
   \"version\": \"${GAME_VERSION}\",
   \"update_at\": \"$(date '+%Y-%m-%d %H:%M:%S')\",
@@ -36,19 +54,31 @@ json_body="{
   \"author\": \"${GAME_AUTHOR}\",
   \"description\": \"${GAME_INFO}\",
   \"message\": \"${GIT_COMMIT_URL}\n$(git log -1 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g')\",
+  \"size\": \"${GAME_SIZE}\",
   \"hash\": \"${GAME_HASH}\"
 }"
 
-echo "Working Directory: \"$(pwd)\""
-echo -e "[DEBUG] JSON Body: ${json_body}\n"
+  echo "Working Directory: \"$(pwd)\""
+  echo -e "[DEBUG] JSON Body: ${json_body}\n"
+}
 
-resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_NAME}" \
-  -H "Content-Type: application/json;charset=UTF-8" \
-  -H "X-Custom-PSK: ${API_TOKEN}" \
-  -d "$json_body"`
+update_api() {
+  resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_NAME}" \
+    -H "Content-Type: application/json;charset=UTF-8" \
+    -H "X-Custom-PSK: ${API_TOKEN}" \
+    -d "$json_body"`
 
-if [ $resp_code == "200" ] ; then
-  echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
-else
-  echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
-fi
+  if [ $resp_code == "200" ] ; then
+    echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
+  else
+    echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
+  fi
+}
+
+main() {
+    init
+    gen_json_body
+    update_api
+}
+
+main "$@"
