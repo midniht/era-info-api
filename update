@@ -15,7 +15,7 @@ humanize_size() {
 }
 
 init() {
-  API_URL="era-data.lackb.fun"
+  API_URL="api.erag.eu.org"
   if [ $# != 0 ] ; then
     API_TOKEN="$1"
   else
