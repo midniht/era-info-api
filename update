@@ -37,7 +37,11 @@ gen_json_body() {
   GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g"`
 
   temp=(`git ls-remote --get-url origin | tr '/' ' '`)
-  GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${temp[1]}/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
+  for var in ${array[@]}
+  do
+    echo $var
+  done
+  GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
 
   GAME_SIZE="$(du -b ${GAME_NAME}.zip | humanize_size)"
 
