@@ -33,7 +33,7 @@ async function handleRequest(request) {
       }
       const game_info = JSON.parse(game_info_text)
       const resp = `${game_info.version}
-${API_URL}/${game_info.name}/download
+${API_URL}/${game_info.name}/file
 
 《${game_info.title}》
 「${game_info.author}」
