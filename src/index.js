@@ -17,12 +17,17 @@ async function handleRequest(request) {
   const game_name = query_param[0]
   switch (request.method) {
     case 'GET':
-      let query_action =
-        query_param.length === 2 ? query_param[1].toLowerCase() : 'version'
-      if (query_action === 'file') {
-        return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
-      } else if (query_action === 'download') {
-        return Response.redirect(`${DOWNLOAD_URL}/${game_name}.zip`, 302)
+      switch (query_param[1].toLowerCase()) {
+        case 'version':
+          break
+        case 'file':
+          return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
+          break
+        case 'download':
+          return Response.redirect(`${DOWNLOAD_URL}/${game_name}.zip`, 302)
+          break
+        default:
+          break
       }
       const game_info_text = await GAME_INFO_DB.get(game_name)
       if (game_info_text === null) {
@@ -30,6 +35,9 @@ async function handleRequest(request) {
           `{ "code": 404, "msg": "Game ${game_name} Not Found" }`,
           404,
         )
+      }
+      if (query_param.length > 2 && query_param[2].toLowerCase() === 'json') {
+        return newResponse(game_info_text, 200)
       }
       const game_info = JSON.parse(game_info_text)
       const resp = `${game_info.version}
