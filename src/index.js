@@ -70,7 +70,7 @@ ${game_info.description}
     case 'POST':
       if (request.headers.get('X-Custom-PSK') === API_TOKEN) {
         const body = await readRequestBody(request)
-        await GAME_INFO_DB.put(game_name, body)
+        await GAME_INFO_DB.put(game_name, body.replaceAll('\r', ''))
         return newResponse(
           '{ "code": 200, "msg": "Update Game Information Success" }',
           200,
