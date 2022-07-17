@@ -39,8 +39,11 @@ async function handleRequest(request) {
       if (query_param.length > 2 && query_param[2].toLowerCase() === 'json') {
         return newResponse(game_info_text, 200)
       }
-      const game_info = JSON.parse(game_info_text)
-      const resp = `${game_info.version}
+      try {
+        const game_info = JSON.parse(game_info_text)
+        if (typeof game_info === 'object' && game_info) {
+          return newResponse(
+            `${game_info.version}
 ${API_URL}/${game_info.name}/file
 
 《${game_info.title}》
@@ -52,8 +55,17 @@ ${game_info.description}
 文件大小: ${game_info.size}
 文件哈希值: ${game_info.hash.toUpperCase()} (SHA1)
 
-详细改动: ${game_info.message.trim()}`
-      return newResponse(resp, 200)
+详细改动: ${game_info.message.trim()}`,
+            200,
+          )
+        }
+      } catch (e) {
+        console.log(`Parse JSON data failed: ${e}\nRaw data: ${game_info_text}`)
+      }
+      return newResponse(
+        '{ "code": 400, "msg": "Parse JSON data string failed" }',
+        200,
+      )
       break
     case 'POST':
       if (request.headers.get('X-Custom-PSK') === API_TOKEN) {
