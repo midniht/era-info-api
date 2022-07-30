@@ -18,14 +18,14 @@ async function handleRequest(request) {
   switch (request.method) {
     case 'GET':
       let game_info = undefined
+      const game_info_json = await GAME_INFO_DB.get(game_slug)
+      if (game_info_json === null) {
+        return newResponse(
+          `{ "code": 404, "msg": "Game ${game_slug} Not Found" }`,
+          404,
+        )
+      }
       try {
-        const game_info_json = await GAME_INFO_DB.get(game_slug)
-        if (game_info_json === null) {
-          return newResponse(
-            `{ "code": 404, "msg": "Game ${game_slug} Not Found" }`,
-            404,
-          )
-        }
         game_info = JSON.parse(game_info_json)
       } catch (e) {
         console.log(`Parse JSON data failed: ${e}\nRaw data: ${game_info_json}`)
