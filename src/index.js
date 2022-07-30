@@ -14,39 +14,62 @@ async function handleRequest(request) {
     return Response.redirect(GITHUB_REPO_URL, 301)
   }
   const query_param = pathname.replace(/^\//, '').split('/')
-  const game_name = query_param[0]
+  const game_slug = query_param[0]
   switch (request.method) {
     case 'GET':
+      let game_info = undefined
+      try {
+        const game_info_json = await GAME_INFO_DB.get(game_slug)
+        if (game_info_json === null) {
+          return newResponse(
+            `{ "code": 404, "msg": "Game ${game_slug} Not Found" }`,
+            404,
+          )
+        }
+        game_info = JSON.parse(game_info_json)
+      } catch (e) {
+        console.log(`Parse JSON data failed: ${e}\nRaw data: ${game_info_json}`)
+        return newResponse(
+          '{ "code": 400, "msg": "Parse JSON data string failed" }',
+          400,
+        )
+      }
+      let game_file = undefined
+      if (typeof game_info === 'object' && game_info) {
+        game_file =
+          Object.hasOwnProperty.call(game_info, 'name') && game_info.name !== ''
+            ? `${game_info.name}.zip`
+            : `${game_info.slug}.zip`
+      } else {
+        return newResponse(
+          `{ "code": 500, "msg": "Parse Game ${game_slug} Info Failed" }`,
+          500,
+        )
+      }
       switch (query_param[1].toLowerCase()) {
         case 'version':
           break
         case 'file':
-          return Response.redirect(`${CDN_URL}/${game_name}.zip`, 302)
+          return Response.redirect(`${CDN_URL}/${game_file}`, 302)
           break
         case 'download':
-          return Response.redirect(`${DOWNLOAD_URL}/${game_name}.zip`, 302)
+          return Response.redirect(`${DOWNLOAD_URL}/${game_file}`, 302)
           break
         default:
           break
       }
-      const game_info_text = await GAME_INFO_DB.get(game_name)
-      if (game_info_text === null) {
-        return newResponse(
-          `{ "code": 404, "msg": "Game ${game_name} Not Found" }`,
-          404,
-        )
-      }
       if (query_param.length > 2 && query_param[2].toLowerCase() === 'json') {
-        return newResponse(game_info_text, 200)
+        return newResponse(game_info_json, 200)
       }
-      try {
-        const game_info = JSON.parse(game_info_text)
-        if (typeof game_info === 'object' && game_info) {
-          return newResponse(
-            `${game_info.version}
+      const game_title =
+        Object.hasOwnProperty.call(game_info, 'title') && game_info.title !== ''
+          ? game_info.title
+          : game_info.name
+      return newResponse(
+        `${game_info.version}
 ${API_URL}/${game_info.name}/file
 
-《${game_info.title}》
+《${game_title}》
 「${game_info.author}」
 
 ${game_info.description}
@@ -56,21 +79,13 @@ ${game_info.description}
 文件哈希值: ${game_info.hash.toUpperCase()} (SHA1)
 
 详细改动: ${game_info.message.trim()}`,
-            200,
-          )
-        }
-      } catch (e) {
-        console.log(`Parse JSON data failed: ${e}\nRaw data: ${game_info_text}`)
-      }
-      return newResponse(
-        '{ "code": 400, "msg": "Parse JSON data string failed" }',
         200,
       )
       break
     case 'POST':
       if (request.headers.get('X-Custom-PSK') === API_TOKEN) {
         const body = await readRequestBody(request)
-        await GAME_INFO_DB.put(game_name, body.replaceAll('\r', ''))
+        await GAME_INFO_DB.put(game_slug, body.replaceAll('\r', ''))
         return newResponse(
           '{ "code": 200, "msg": "Update Game Information Success" }',
           200,
