@@ -30,14 +30,15 @@ init() {
 
 gen_json_body() {
   GAMEBASE_FILE=`find . -iwholename "./csv/gamebase.csv"`
-  GAME_NAME="$(basename `git rev-parse --show-toplevel`)"
+  GAME_SLUG="$(basename `git rev-parse --show-toplevel`)"
+  GAME_NAME=`cat "./README.md" | grep -m 1 "^# " | sed "s/^# //" | sed "s/ //g" | sed "s/\r*//g"`
   GAME_VERSION=`cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g" | sed "s/\r*//g"`
   GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g"`
   GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g"`
   GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g"`
 
   temp=(`git ls-remote --get-url origin | tr '/' ' '`)
-  GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${temp[@]:(-2):1}/${GAME_NAME}/-/commit/$(git rev-parse HEAD)"
+  GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${temp[@]:(-2):1}/${GAME_SLUG}/-/commit/$(git rev-parse HEAD)"
 
   GAME_SIZE="$(du -b ${GAME_NAME}.zip | humanize_size)"
 
@@ -48,6 +49,7 @@ gen_json_body() {
   fi
 
   json_body="{
+  \"slug\": \"${GAME_SLUG}\",
   \"name\": \"${GAME_NAME}\",
   \"version\": \"${GAME_VERSION}\",
   \"update_at\": \"$(date '+%Y-%m-%d %H:%M:%S')\",
@@ -64,13 +66,13 @@ gen_json_body() {
 }
 
 update_api() {
-  resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_NAME}" \
+  resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_SLUG}" \
     -H "Content-Type: application/json;charset=UTF-8" \
     -H "X-Custom-PSK: ${API_TOKEN}" \
     -d "$json_body"`
 
   if [ $resp_code == "200" ] ; then
-    echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_NAME}/version 更新成功"
+    echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
   else
     echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
   fi
