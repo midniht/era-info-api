@@ -63,7 +63,17 @@ async function handleRequest(request) {
           break
         case 'download':
           // 跳转到网盘的下载直链
-          return Response.redirect(`${DOWNLOAD_URL}/${game_info.name}.zip`, 302)
+          if (
+            query_param.length > 2 &&
+            query_param[2].toLowerCase() === 'debug'
+          ) {
+            return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
+          } else {
+            return Response.redirect(
+              `${DOWNLOAD_URL}/${game_info.name}.zip`,
+              302,
+            )
+          }
           break
         default:
           // 其他参数 继续处理
