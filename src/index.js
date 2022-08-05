@@ -17,59 +17,76 @@ async function handleRequest(request) {
   const game_slug = query_param[0]
   switch (request.method) {
     case 'GET':
+      // 查询 KV 数据库
       let game_info = undefined
       const game_info_json = await GAME_INFO_DB.get(game_slug)
+
+      // 查询的条目不存在 返回 404
       if (game_info_json === null) {
         return newResponse(
           `{ "code": 404, "msg": "Game ${game_slug} Not Found" }`,
           404,
         )
       }
+
+      // 将查询的条目解析为 JSON 格式
       try {
         game_info = JSON.parse(game_info_json)
       } catch (e) {
+        // 解析失败 返回 400
         console.log(`Parse JSON data failed: ${e}\nRaw data: ${game_info_json}`)
         return newResponse(
           '{ "code": 400, "msg": "Parse JSON data string failed" }',
           400,
         )
       }
-      let game_file = undefined
+
+      // 判断 JSON 转对象是否成功
       if (typeof game_info === 'object' && game_info) {
-        game_file =
-          Object.hasOwnProperty.call(game_info, 'name') && game_info.name !== ''
-            ? `${game_info.name}.zip`
-            : `${game_info.slug}.zip`
+        console.debug('game_info=', game_info)
       } else {
+        // 获取对象失败 返回 500
         return newResponse(
           `{ "code": 500, "msg": "Parse Game ${game_slug} Info Failed" }`,
           500,
         )
       }
+
+      // 处理 URL 格式参数
       switch (query_param[1].toLowerCase()) {
         case 'version':
+          // 尝试获取版本信息 继续处理
           break
         case 'file':
-          return Response.redirect(`${CDN_URL}/${game_file}`, 302)
+          // 跳转到网盘的文件页面
+          return Response.redirect(`${CDN_URL}/${game_info.name}`, 302)
           break
         case 'download':
-          return Response.redirect(`${DOWNLOAD_URL}/${game_file}`, 302)
+          // 跳转到网盘的下载直链
+          return Response.redirect(`${DOWNLOAD_URL}/${game_info.name}`, 302)
           break
         default:
+          // 其他参数 继续处理
           break
       }
+
+      // 访问 /游戏名/*/json 返回 JSON 格式版本信息
       if (query_param.length > 2 && query_param[2].toLowerCase() === 'json') {
         return newResponse(game_info_json, 200)
       }
-      const game_title =
-        Object.hasOwnProperty.call(game_info, 'title') && game_info.title !== ''
-          ? game_info.title
-          : game_info.name
+
+      // 其他情况 一律返回标准的 plain 版本信息
+      if (!Object.hasOwnProperty.call(game_info, 'slug')) {
+        game_info.slug = game_info.name
+      }
+      if (!game_info.title) {
+        game_info.title = game_info.name
+      }
       return newResponse(
         `${game_info.version}
-${API_URL}/${game_info.name}/file
+${API_URL}/${game_info.slug}/file
 
-《${game_title}》
+《${game_info.title}》
 「${game_info.author}」
 
 ${game_info.description}
