@@ -83,7 +83,7 @@ async function handleRequest(request) {
                 headers.set('etag', game_file.httpEtag)
                 headers.set(
                   'Content-Disposition',
-                  `attachment; filename="${game_info.name}.zip"`,
+                  `attachment; name="${game_info.name}"; filename="${game_info.name}.zip"`,
                 )
                 return new Response(game_file.body, {
                   headers,
@@ -100,10 +100,27 @@ async function handleRequest(request) {
                 break
             }
           } else {
-            return Response.redirect(
-              `${DOWNLOAD_URL}/${game_info.name}.zip`,
-              302,
+            const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
+            if (game_file === null) {
+              return Response.redirect(
+                `${DOWNLOAD_URL}/${game_info.name}.zip`,
+                302,
+              )
+              return newResponse(
+                '{ "code": 404, "msg": "Object Not Found" }',
+                404,
+              )
+            }
+            const headers = new Headers()
+            game_file.writeHttpMetadata(headers)
+            headers.set('etag', game_file.httpEtag)
+            headers.set(
+              'Content-Disposition',
+              `attachment; name="${game_info.name}"; filename="${game_info.name}.zip"`,
             )
+            return new Response(game_file.body, {
+              headers,
+            })
           }
           break
         default:
