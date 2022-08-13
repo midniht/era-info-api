@@ -75,6 +75,7 @@ update_api() {
     echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
   else
     echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
+    exit 1
   fi
 }
 
