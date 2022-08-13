@@ -67,7 +67,16 @@ async function handleRequest(request) {
             query_param.length > 2 &&
             query_param[2].toLowerCase() === 'debug'
           ) {
-            return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
+            const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
+            if (game_file) {
+              return new Response(game_file.body)
+            } else {
+              return newResponse(
+                '{ "code": 404, "msg": "Object Not Found" }',
+                404,
+              )
+            }
+            // return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
           } else {
             return Response.redirect(
               `${DOWNLOAD_URL}/${game_info.name}.zip`,

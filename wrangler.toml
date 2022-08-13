@@ -12,6 +12,10 @@ kv_namespaces = [
   { binding = "GAME_INFO_DB", id = "4ed55184883b4e8fb4bd9cb07634ee2e" }
 ]
 
+[[r2_buckets]]
+binding = 'ERA_CDN'
+bucket_name = 'era-games'
+
 [env.production.vars]
 ENVIRONMENT = "production"
 API_URL = "https://api.erag.eu.org"
