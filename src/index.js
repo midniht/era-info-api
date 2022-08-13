@@ -63,20 +63,38 @@ async function handleRequest(request) {
           break
         case 'download':
           // 跳转到网盘的下载直链
-          if (
-            query_param.length > 2 &&
-            query_param[2].toLowerCase() === 'debug'
-          ) {
-            const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
-            if (game_file) {
-              return new Response(game_file.body)
-            } else {
-              return newResponse(
-                '{ "code": 404, "msg": "Object Not Found" }',
-                404,
-              )
+          if (query_param.length > 2) {
+            switch (query_param[2].toLowerCase()) {
+              case 'debug':
+                return newResponse(
+                  `{ "code": 200, "msg": "Debugging", "slug": "${game_info.slug}", "name": "${game_info.name}" }`,
+                  200,
+                )
+              case 'r2':
+                const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
+                if (game_file === null) {
+                  return newResponse(
+                    '{ "code": 404, "msg": "Object Not Found" }',
+                    404,
+                  )
+                }
+                const headers = new Headers()
+                game_file.writeHttpMetadata(headers)
+                headers.set('etag', game_file.httpEtag)
+                return new Response(game_file.body, {
+                  headers,
+                })
+                break
+              case 'od':
+                return Response.redirect(
+                  `${DOWNLOAD_URL}/${game_info.name}.zip`,
+                  302,
+                )
+                break
+              default:
+                return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
+                break
             }
-            // return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
           } else {
             return Response.redirect(
               `${DOWNLOAD_URL}/${game_info.name}.zip`,
