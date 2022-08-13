@@ -62,52 +62,33 @@ async function handleRequest(request) {
           return Response.redirect(`${CDN_URL}/${game_info.name}.zip`, 302)
           break
         case 'download':
-          // 跳转到网盘的下载直链
+          // 直接下载
           if (query_param.length > 2) {
             switch (query_param[2].toLowerCase()) {
               case 'debug':
+                // 显示游戏名和 slug
                 return newResponse(
                   `{ "code": 200, "msg": "Debugging", "slug": "${game_info.slug}", "name": "${game_info.name}" }`,
                   200,
                 )
-              case 'r2':
-                const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
-                if (game_file === null) {
-                  return newResponse(
-                    '{ "code": 404, "msg": "Object Not Found" }',
-                    404,
-                  )
-                }
-                const headers = new Headers()
-                game_file.writeHttpMetadata(headers)
-                headers.set('etag', game_file.httpEtag)
-                headers.set(
-                  'Content-Disposition',
-                  `attachment; name="${game_info.name}"; filename="${game_info.name}.zip"`,
-                )
-                return new Response(game_file.body, {
-                  headers,
-                })
-                break
-              case 'od':
+              case 'onedrive':
+                // 跳转到网盘的下载直链
                 return Response.redirect(
                   `${DOWNLOAD_URL}/${game_info.name}.zip`,
                   302,
                 )
                 break
               default:
+                // 显示网盘的下载直链
                 return newResponse(`${DOWNLOAD_URL}/${game_info.name}.zip`, 200)
                 break
             }
           } else {
+            // 直接从 R2 CDN 下载
             const game_file = await ERA_CDN.get(`${game_info.name}.zip`)
             if (game_file === null) {
-              return Response.redirect(
-                `${DOWNLOAD_URL}/${game_info.name}.zip`,
-                302,
-              )
               return newResponse(
-                '{ "code": 404, "msg": "Object Not Found" }',
+                `{ "code": 404, "msg": "Object Not Found", "info": "如果你看到这条报错信息，请到 https://discord.gg/C97fHN8Rnk 反馈 ${game_info.name} 资源缺失" }`,
                 404,
               )
             }
