@@ -81,6 +81,10 @@ async function handleRequest(request) {
                 const headers = new Headers()
                 game_file.writeHttpMetadata(headers)
                 headers.set('etag', game_file.httpEtag)
+                headers.set(
+                  'Content-Disposition',
+                  `attachment; filename="${game_info.name}.zip"`,
+                )
                 return new Response(game_file.body, {
                   headers,
                 })
