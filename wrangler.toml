@@ -6,15 +6,18 @@ kv_namespaces = [
   { binding = "GAME_INFO_DB", id = "00000000000000000000000000000000" }
 ]
 
+r2_buckets = [
+  { binding = 'ERA_CDN', bucket_name = '<YOUR_BUCKET_NAME>' }
+]
+
 [env.production]
 name = "era"
 kv_namespaces = [
   { binding = "GAME_INFO_DB", id = "4ed55184883b4e8fb4bd9cb07634ee2e" }
 ]
-
-[[r2_buckets]]
-binding = 'ERA_CDN'
-bucket_name = 'era-games'
+r2_buckets = [
+  { binding = 'ERA_CDN', bucket_name = 'era-games' }
+]
 
 [env.production.vars]
 ENVIRONMENT = "production"
