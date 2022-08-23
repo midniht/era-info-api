@@ -25,3 +25,7 @@ $ git pull
 # 如果发生冲突
 $ rm update && git pull && chmod +x update
 ```
+
+```Bash
+$ cd ~/era_games_data && rm update && git pull && chmod +x update
+```
