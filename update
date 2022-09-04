@@ -56,7 +56,7 @@ gen_json_body() {
   \"title\": \"${GAME_TITLE}\",
   \"author\": \"${GAME_AUTHOR}\",
   \"description\": \"${GAME_INFO}\",
-  \"message\": \"${GIT_COMMIT_URL}\n$(git log -3 --pretty='%B' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g' | sed 's/\t/ /g')\",
+  \"message\": \"${GIT_COMMIT_URL}\n$(git log -3 --pretty='%B' | sed 's/\r//g' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g' | sed 's/\t/ /g')\",
   \"size\": \"${GAME_SIZE}\",
   \"hash\": \"${GAME_HASH}\"
 }"
