@@ -4,7 +4,7 @@
 
 ```Bash
 $ git clone https://github.com/1ackbfun/era-info-api.git -b script ~/era_games_data
-$ chmod +x ~/era_games_data/update
+$ cd ~/era_games_data && chmod +x update clear_cache
 $ echo "TOKEN" > ~/era_games_data/ERA_API_TOKEN
 $ chmod 600 ~/era_games_data/ERA_API_TOKEN
 ```
@@ -27,7 +27,7 @@ $ rm update && git pull && chmod +x update clear_cache
 ```
 
 ```Bash
-$ cd ~/era_games_data && rm update && git pull && chmod +x update clear_cache
+$ cd ~/era_games_data && git pull && chmod +x update clear_cache
 ```
 
 ## 定时清理 GitLab Runner 缓存
