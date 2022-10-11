@@ -1,0 +1,11 @@
+#!/bin/bash
+
+MAX_LIMIT=75
+disk_info=`df -h | sed -n '/\/$/p'`
+remain_percent=`echo "${disk_info}" | awk '{print $5}' | sed 's/%//g' | awk '{print int($0)}'`
+
+if [ $remain_percent -lt $MAX_LIMIT ] ; then
+    echo -e "$(df -h | sed -n '1,2p')\n$(date)\nsafe"
+else
+    rm -rf /home/gitlab-runner/builds/*/0/era-games-zh/*
+fi

@@ -23,9 +23,21 @@ $ ~/era_games_data/update "TOKEN"
 $ cd ~/era_games_data
 $ git pull
 # 如果发生冲突
-$ rm update && git pull && chmod +x update
+$ rm update && git pull && chmod +x update clear_cache
 ```
 
 ```Bash
-$ cd ~/era_games_data && rm update && git pull && chmod +x update
+$ cd ~/era_games_data && rm update && git pull && chmod +x update clear_cache
+```
+
+## 定时清理 GitLab Runner 缓存
+
+```Bash
+$ crontab -e
+```
+
+参考 [crontab guru](https://crontab.guru/examples.html) 设置定时任务：
+
+```
+0 * * * * /home/gitlab-runner/era_games_data/clear_cache >/dev/null 2>&1
 ```
