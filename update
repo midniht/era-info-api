@@ -3,52 +3,114 @@
 humanize_size() {
   while read file_bytes dummy; do
     [ $file_bytes -lt 1024 ] && echo ${file_bytes} B && break
-    file_kilobytes=$(((file_bytes+512)/1024))
+    file_kilobytes=$(((file_bytes + 512) / 1024))
     [ $file_kilobytes -lt 1024 ] && echo ${file_kilobytes} KB && break
-    file_megabytes=$(((file_kilobytes+512)/1024))
+    file_megabytes=$(((file_kilobytes + 512) / 1024))
     [ $file_megabytes -lt 1024 ] && echo ${file_megabytes} MB && break
-    file_gigabytes=$(((file_megabytes+512)/1024))
+    file_gigabytes=$(((file_megabytes + 512) / 1024))
     [ $file_gigabytes -lt 1024 ] && echo ${file_gigabytes} GB && break
-    file_terabytes=$(((file_gigabytes+512)/1024))
+    file_terabytes=$(((file_gigabytes + 512) / 1024))
     echo ${file_terabytes} TB
   done
 }
 
-init() {
-  API_URL="api.erag.eu.org"
-  if [ $# != 0 ] ; then
-    API_TOKEN="$1"
-  else
-    token_file="`dirname $0`/ERA_API_TOKEN"
-    if [ -f "${token_file}" ] ; then
-      API_TOKEN=`sed -n '1p;1q' ${token_file}`
-    else
-      API_TOKEN=""
-    fi
-  fi
+print_usage() {
+  echo "参数用法:
+
+    --api-token
+            指定 IP
+
+    --tg-bot-token
+            指定端口
+
+    --tg-channel-id
+            指定端口
+
+    -h, --help
+            显示帮助信息"
 }
 
-gen_json_body() {
-  GAMEBASE_FILE=`find . -iwholename "./csv/gamebase.csv"`
-  GAME_SLUG="$(basename `git rev-parse --show-toplevel`)"
-  GAME_NAME=`cat "./README.md" | grep -m 1 "^# " | sed "s/^# //" | sed "s/ //g" | sed "s/\r*//g"`
-  GAME_VERSION=`cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g" | sed "s/\r*//g"`
-  GAME_TITLE=`cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g'`
-  GAME_AUTHOR=`cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g'`
-  GAME_INFO=`cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g'`
+init() {
+  ARGS=$(getopt --options h --long api-token:,tg-bot-token:,tg-channel-id:,help -n '中文era版本更新集成脚本' -- "$@")
+  if [ $? != 0 ]; then
+    echo "error: 使用 getopt 解析参数时发生错误"
+    exit 1
+  fi
 
-  temp=(`git ls-remote --get-url origin | tr '/' ' '`)
+  echo $ARGS
+  eval set -- "${ARGS}"
+  while true; do
+    case "$1" in
+    --api-token)
+      API_TOKEN="$2"
+      shift 2
+      ;;
+    --tg-bot-token)
+      TELEGRAM_BOT_TOKEN="$2"
+      shift 2
+      ;;
+    --tg-channel-id)
+      TELEGRAM_CHANNEL_ID="$2"
+      shift 2
+      ;;
+    -h | --help)
+      print_usage
+      exit
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "error: 内部处理出错"
+      exit 1
+      ;;
+    esac
+  done
+
+  if [ ! $API_TOKEN ]; then
+    if [ $# != 0 ]; then
+      API_TOKEN="$1"
+    else
+      token_file="$(dirname $0)/ERA_API_TOKEN"
+      if [ -f "${token_file}" ]; then
+        API_TOKEN=$(sed -n '1p;1q' ${token_file})
+      else
+        echo "error: 没有指定 API token"
+        exit 1
+      fi
+    fi
+  fi
+
+  API_URL="api.erag.eu.org"
+}
+
+gen_version_json() {
+  GAMEBASE_FILE=$(find . -iwholename "./csv/gamebase.csv")
+  GAME_SLUG="$(basename $(git rev-parse --show-toplevel))"
+  GAME_NAME=$(cat "./README.md" | grep -m 1 "^# " | sed "s/^# //" | sed "s/ //g" | sed "s/\r*//g")
+  GAME_VERSION=$(cat ${GAMEBASE_FILE} | grep -m 1 "^バージョン名" | sed "s/^バージョン名\s*,\s*//" | sed "s/ //g" | sed "s/\r*//g")
+  GAME_TITLE=$(cat ${GAMEBASE_FILE} | grep -m 1 "^タイトル" | sed "s/^タイトル\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g')
+  GAME_AUTHOR=$(cat ${GAMEBASE_FILE} | grep -m 1 "^作者" | sed "s/^作者\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g')
+  GAME_INFO=$(cat ${GAMEBASE_FILE} | grep -m 1 "^追加情報" | sed "s/^追加情報\s*,\s*//" | sed "s/^ *//g" | sed "s/\r*//g" | sed 's/\"/\\\"/g')
+
+  if [ ! $GAME_TITLE ]; then
+    GAME_TITLE="$GAME_NAME"
+  fi
+
+  temp=($(git ls-remote --get-url origin | tr '/' ' '))
   GIT_COMMIT_URL="https://gitgud.io/era-games-zh/${temp[@]:(-2):1}/${GAME_SLUG}/-/commit/$(git rev-parse HEAD)"
 
   GAME_SIZE="$(du -b ${GAME_NAME}.zip | humanize_size)"
 
-  if [ -f "${GAME_NAME}.zip" ] ; then
-    GAME_HASH=`sha1sum ${GAME_NAME}.zip | awk '{print $1}'`
+  if [ -f "${GAME_NAME}.zip" ]; then
+    GAME_HASH=$(sha1sum ${GAME_NAME}.zip | awk '{print $1}')
   else
     GAME_HASH="error: file ${GAME_NAME}.zip not found"
   fi
+  GIT_COMMIT_MESSAGE=$(git log -3 --pretty='%B' | sed 's/\r//g' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g' | sed 's/\t/ /g')
 
-  json_body="{
+  version_json="{
   \"slug\": \"${GAME_SLUG}\",
   \"name\": \"${GAME_NAME}\",
   \"version\": \"${GAME_VERSION}\",
@@ -56,33 +118,91 @@ gen_json_body() {
   \"title\": \"${GAME_TITLE}\",
   \"author\": \"${GAME_AUTHOR}\",
   \"description\": \"${GAME_INFO}\",
-  \"message\": \"${GIT_COMMIT_URL}\n$(git log -3 --pretty='%B' | sed 's/\r//g' | sed ':label;N;s/\n/\\n/;b label' | sed 's/^[ \s]\{1,\}//g;s/[ \s]\{1,\}$//g' | sed 's/\"/\\\"/g' | sed 's/\t/ /g')\",
+  \"message\": \"${GIT_COMMIT_URL}\n${GIT_COMMIT_MESSAGE}\",
   \"size\": \"${GAME_SIZE}\",
   \"hash\": \"${GAME_HASH}\"
 }"
 
   echo "Working Directory: \"$(pwd)\""
-  echo "[DEBUG] JSON Body: ${json_body}"
+  echo "[DEBUG] JSON Body: ${version_json}"
 }
 
 update_api() {
-  resp_code=`curl -l -s -w "%{http_code}" -o /tmp/update-era-games-data-result -X POST "https://${API_URL}/${GAME_SLUG}" \
+  resp_code=$(
+    curl -l -s -w "%{http_code}" -o /tmp/era-games-update-version-result -X POST "https://${API_URL}/${GAME_SLUG}" \
     -H "Content-Type: application/json;charset=UTF-8" \
     -H "X-Custom-PSK: ${API_TOKEN}" \
-    -d "$json_body"`
+    -d "$version_json"
+  )
 
-  if [ $resp_code == "200" ] ; then
-    echo -e "$(cat /tmp/update-era-games-data-result)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
+  if [ $resp_code == "200" ]; then
+    echo -e "$(cat /tmp/era-games-update-version-result)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
   else
-    echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/update-era-games-data-result)"
+    echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-update-version-result)"
+    exit 1
+  fi
+}
+
+push_to_telegram() {
+  download_url="https://${API_URL}/${GAME_SLUG}/download"
+  message_text="中文 era 游戏库 - <a href=\\\"https://gitgud.io/era-games-zh/${temp[@]:(-2):1}/${GAME_SLUG}\\\">Git 仓库</a>
+
+▎<b>${GAME_TITLE}</b> <i>${GAME_VERSION}</i>
+
+更新于 $(date '+%Y-%m-%d %H:%M:%S') CST
+
+🏷 #熟肉
+📥 <a href=\\\"${download_url}\\\">点击直接下载</a>
+<code>${GAME_NAME}.zip</code> <i>${GAME_SIZE}</i>
+
+▎<a href=\\\"${GIT_COMMIT_URL}\\\">上次改动详情</a>
+
+${GIT_COMMIT_MESSAGE}"
+  zip_size=$(du -b ${GAME_NAME}.zip | awk '{print $1}')
+  if ((zip_size < 20 * 1024 * 1024)); then
+    telegram_json="{
+  \"chat_id\": \"${TELEGRAM_CHANNEL_ID}\",
+  \"document\": \"${download_url}\",
+  \"caption\": \"${message_text}\",
+  \"parse_mode\": \"HTML\",
+  \"disable_web_page_preview\": true
+}"
+    resp_code=$(
+      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result \
+      -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+      -H "Content-Type: application/json;charset=UTF-8" \
+      -d "$telegram_json"
+    )
+  else
+    telegram_json="{
+  \"chat_id\": \"${TELEGRAM_CHANNEL_ID}\",
+  \"text\": \"${message_text}\",
+  \"parse_mode\": \"HTML\",
+  \"disable_web_page_preview\": true
+}"
+    resp_code=$(
+      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result \
+      -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      -H "Content-Type: application/json;charset=UTF-8" \
+      -d "$telegram_json"
+    )
+  fi
+
+  if [ $resp_code == "200" ]; then
+    echo -e "$(cat /tmp/era-games-push-telegram-result)\n推送到 Telegram 成功"
+  else
+    echo -e "推送到 Telegram 失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-push-telegram-result)"
     exit 1
   fi
 }
 
 main() {
-    init
-    gen_json_body
-    update_api
+  init $@
+  gen_version_json
+  update_api
+  if [ $TELEGRAM_BOT_TOKEN ] && [ $TELEGRAM_CHANNEL_ID ]; then
+    push_to_telegram
+  fi
 }
 
-main "$@"
+main $@
