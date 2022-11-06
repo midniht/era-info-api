@@ -59,7 +59,7 @@ async function handleRequest(request) {
           break
         case 'file':
           // 跳转到网盘的文件页面
-          return Response.redirect(`${CDN_URL}/${game_info.name}.zip`, 302)
+          return Response.redirect(`${PREVIEW_URL}/${game_info.name}.zip`, 302)
           break
         case 'download':
           // 直接下载
