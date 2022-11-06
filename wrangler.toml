@@ -22,6 +22,6 @@ r2_buckets = [
 [env.production.vars]
 ENVIRONMENT = "production"
 API_URL = "https://api.erag.eu.org"
-CDN_URL = "https://pan.erag.eu.org/zh-CN/%F0%9F%95%B9%EF%B8%8F%20era%20%E6%B8%B8%E6%88%8F%20-%20%E7%86%9F%E8%82%89%EF%BC%88%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC%EF%BC%89"
-DOWNLOAD_URL = "https://pan.erag.eu.org/api/raw/?path=/%F0%9F%95%B9%EF%B8%8F%20era%20%E6%B8%B8%E6%88%8F%20-%20%E7%86%9F%E8%82%89%EF%BC%88%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC%EF%BC%89"
+CDN_URL = "https://pan.erag.eu.org/d/%F0%9F%95%B9%EF%B8%8F%20era%20%E6%B8%B8%E6%88%8F%20-%20%E7%86%9F%E8%82%89%EF%BC%88%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC%EF%BC%89"
+DOWNLOAD_URL = "https://pan.erag.eu.org/%F0%9F%95%B9%EF%B8%8F%20era%20%E6%B8%B8%E6%88%8F%20-%20%E7%86%9F%E8%82%89%EF%BC%88%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC%EF%BC%89"
 GITHUB_REPO_URL = "https://github.com/1ackbfun/era-info-api"
