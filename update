@@ -124,21 +124,21 @@ gen_version_json() {
 }"
 
   echo "Working Directory: \"$(pwd)\""
-  echo "[DEBUG] JSON Body: ${version_json}"
+  echo "[DEBUG] JSON Body for API: ${version_json}"
 }
 
 update_api() {
   resp_code=$(
-    curl -l -s -w "%{http_code}" -o /tmp/era-games-update-version-result -X POST "https://${API_URL}/${GAME_SLUG}" \
+    curl -l -s -w "%{http_code}" -o /tmp/era-games-update-version-result.log -X POST "https://${API_URL}/${GAME_SLUG}" \
     -H "Content-Type: application/json;charset=UTF-8" \
     -H "X-Custom-PSK: ${API_TOKEN}" \
     -d "$version_json"
   )
 
   if [ $resp_code == "200" ]; then
-    echo -e "$(cat /tmp/era-games-update-version-result)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
+    echo -e "$(cat /tmp/era-games-update-version-result.log)\n版本信息数据库 https://${API_URL}/${GAME_SLUG}/version 更新成功"
   else
-    echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-update-version-result)"
+    echo -e "更新版本信息失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-update-version-result.log)"
     exit 1
   fi
 }
@@ -158,6 +158,7 @@ push_to_telegram() {
 ▎<a href=\\\"${GIT_COMMIT_URL}\\\">上次改动详情</a>
 
 ${GIT_COMMIT_MESSAGE}"
+  echo "[DEBUG] Message content for Telegram: ${message_text}"
   zip_size=$(du -b ${GAME_NAME}.zip | awk '{print $1}')
   if ((zip_size < 20 * 1024 * 1024)); then
     telegram_json="{
@@ -168,7 +169,7 @@ ${GIT_COMMIT_MESSAGE}"
   \"disable_web_page_preview\": true
 }"
     resp_code=$(
-      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result \
+      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result.log \
       -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
       -H "Content-Type: application/json;charset=UTF-8" \
       -d "$telegram_json"
@@ -181,7 +182,7 @@ ${GIT_COMMIT_MESSAGE}"
   \"disable_web_page_preview\": true
 }"
     resp_code=$(
-      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result \
+      curl -l -s -w "%{http_code}" -o /tmp/era-games-push-telegram-result.log \
       -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
       -H "Content-Type: application/json;charset=UTF-8" \
       -d "$telegram_json"
@@ -189,10 +190,10 @@ ${GIT_COMMIT_MESSAGE}"
   fi
 
   if [ $resp_code == "200" ]; then
-    echo -e "$(cat /tmp/era-games-push-telegram-result)\n推送到 Telegram 成功"
+    echo -e "$(cat /tmp/era-games-push-telegram-result.log)\n推送到 Telegram 成功"
   else
-    echo -e "推送到 Telegram 失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-push-telegram-result)"
-    exit 1
+    echo -e "推送到 Telegram 失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-push-telegram-result.log)"
+    exit 0
   fi
 }
 
