@@ -23,11 +23,11 @@ $ ~/era_games_data/update "TOKEN"
 $ cd ~/era_games_data
 $ git pull
 # 如果发生冲突
-$ rm update && git pull && chmod +x update clear_cache
+$ rm update && git pull -f && chmod +x update clear_cache
 ```
 
 ```Bash
-$ cd ~/era_games_data && git pull && chmod +x update clear_cache
+$ cd ~/era_games_data && git pull -f && chmod +x update clear_cache
 ```
 
 ## 定时清理 GitLab Runner 缓存

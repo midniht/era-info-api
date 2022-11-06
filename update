@@ -193,7 +193,6 @@ ${GIT_COMMIT_MESSAGE}"
     echo -e "$(cat /tmp/era-games-push-telegram-result.log)\n推送到 Telegram 成功"
   else
     echo -e "推送到 Telegram 失败 返回的响应为 ${resp_code}\n$(cat /tmp/era-games-push-telegram-result.log)"
-    exit 0
   fi
 }
 
